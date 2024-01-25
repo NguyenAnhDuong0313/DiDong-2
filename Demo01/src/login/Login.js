@@ -72,10 +72,9 @@ const Login = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   logo: {
-    marginTop: 5,
-    marginLeft: 105,
+    marginLeft: 80,
     width: 200,
-    height: 300,
+    height: 150,
     resizeMode: 'contain',
   },
   container: {
@@ -84,7 +83,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
   },
   text: {
