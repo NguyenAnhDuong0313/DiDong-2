@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, FlatList, Image, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, FlatList, Image,Button, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Header from './HomeScreen';
@@ -91,28 +91,33 @@ export default function Addtocart({ navigation, navigateToProductDetail }) {
             });
     };
     const handleReduceQuantity = (itemId) => {
-
         const updatedCart = cartItems.map(item => {
-            if (item.id === itemId) {
-
-                const newQuantity = Math.max(1, item.quantity - 1);
-                return { ...item, quantity: newQuantity };
+          if (item.id === itemId) {
+            const newQuantity = Math.max(0, item.quantity - 1);
+            if (newQuantity === 0) {
+              return null; 
             }
-            return item;
+            return { ...item, quantity: newQuantity };
+          }
+          return item;
         });
-
-        setCartItems(updatedCart);
-
-
-        AsyncStorage.setItem('cart', JSON.stringify(updatedCart))
-            .then(() => {
-                console.log('Số lượng sản phẩm đã được giảm');
-            })
-            .catch((error) => {
-                console.error('Lỗi khi lưu giỏ hàng mới:', error);
-            });
+      
+        const filteredCart = updatedCart.filter(item => item !== null);
+      
+        setCartItems(filteredCart);
+      
+        AsyncStorage.setItem('cart', JSON.stringify(filteredCart))
+          .then(() => {
+            console.log('Số lượng sản phẩm đã được giảm');
+          })
+          .catch((error) => {
+            console.error('Lỗi khi lưu giỏ hàng mới:', error);
+          });
+      };
+    const handleCheckout = () => {
+        navigation.navigate('Payment');
     };
-
+    
 
     return (
         <View style={styles.container}>
@@ -170,9 +175,10 @@ export default function Addtocart({ navigation, navigateToProductDetail }) {
                 <Text style={styles.totalText}>Tổng thanh toán:</Text>
                 <Text style={styles.totalPrice}>{calculateTotalPrice()} VNĐ</Text>
             </View>
-            <TouchableOpacity style={styles.paymentButton}>
+            {/* <TouchableOpacity style={styles.paymentButton}>
                 <Text style={styles.paymentButtonText}>Thanh toán</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
+            <Button title="Thanh Toán" onPress={handleCheckout} />
         </View>
     );
 
@@ -217,10 +223,11 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     title: {
-        fontSize: 13,
+        fontSize: 20,
         fontWeight: 'bold',
-        marginBottom: 4,
-    },
+        marginBottom: 16,
+        color:'grey',
+      },
     price: {
         fontSize: 14,
         color: '#000033',

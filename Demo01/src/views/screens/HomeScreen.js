@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState,useContext } from 'react';
 import {
   SafeAreaView,
   View,
@@ -16,6 +16,8 @@ import COLORS from '../../consts/colors';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import furnitures from '../../consts/furnitures';
+import { MaterialIcons } from '@expo/vector-icons';
+import { SearchContext } from './SearchContext';
 const { width } = Dimensions.get('screen');
 
 const HomeScreen = ({ navigation }) => {
@@ -25,25 +27,41 @@ const HomeScreen = ({ navigation }) => {
     { name: 'Suzuki', iconName: '' },
     { name: 'Toyota', iconName: '' },
   ];
+  const [searchText, setSearchText] = useState('');
+  const { searchResults, setSearchResults } = useContext(SearchContext);
+
+  const handleSearch = () => {
+    setSearchResults(searchText);
+  };
 
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
     callAPI();
-  }, []);
+  }, [searchResults]);
 
   const callAPI = () => {
-    axios
-      .get('https://fakestoreapi.com/products')
-      .then(function (response) {
-        setProducts(response.data);
-      })
-      .catch(function (error) {
-        alert(error.message);
-      })
-      .finally(function () {
-        console.log('Finally called');
-      });
+    let url = 'https://fakestoreapi.com/products';
+
+        axios
+            .get(url)
+            .then(function (response) {
+                let products = response.data;
+
+                if (searchResults && searchResults.length > 0) {
+                    const searchValue = searchResults.toLowerCase(); 
+
+                    products = products.filter(product => {
+                        const title = product.title.toLowerCase(); 
+                        return title.startsWith(searchValue);
+                    });
+                }
+
+                setProducts(products);
+            })
+            .catch(function (error) {
+                alert(error.message);
+            });
   };
   const ListCategories = () => {
     const [selectedCategoryIndex, setSelectedCategoryIndex] = React.useState(0);
@@ -171,12 +189,13 @@ const HomeScreen = ({ navigation }) => {
           }}>
           <View style={style.searchInputContainer}>
             <Icon name="magnify" color={COLORS.grey} size={25} />
-            <TextInput placeholder="Search..." />
+            <TextInput placeholder="Search..." value={searchText}
+        onChangeText={setSearchText} />
           </View>
 
-          <View style={style.sortBtn}>
-            <Icon name="tune" color={COLORS.white} size={25} />
-          </View>
+          <TouchableOpacity style={style.sortBtn} onPress={handleSearch}>
+            <MaterialIcons name="search" color={COLORS.white} size={25} />
+          </TouchableOpacity>
         </View>
 
         <Text style={style.title}>Danh mục</Text>

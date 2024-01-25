@@ -1,109 +1,174 @@
-import { StatusBar } from 'expo-status-bar';
-import {
-  StyleSheet, Text, View, TextInput, TouchableOpacity,
-  KeyboardAvoidingView, ImageBackground
-} from 'react-native';
-import React from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, ImageBackground, Alert } from 'react-native';
 
-function Register({ navigation }) {
-  return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <View>
-        <ImageBackground style={styles.background}>
-          <Text style={styles.title}>Tạo Tài Khoản Mới!</Text>
-          <View style={{ marginTop: 40 }}>
-            <View style={styles.iconinput}>
-              <Icon name="user" size={30} color="chartreuse" />
-              <TextInput style={styles.input}
-                placeholderTextColor={"#000033"}
-                placeholder="Nhập tên đăng nhập hoặc email" />
-            </View>
+const Register = ({ navigation }) => {
 
-            <View style={styles.iconinput}>
-              <Icon name="lock" size={30} color="chartreuse" />
-              <TextInput style={styles.input}
-                placeholderTextColor={"#000033"}
-                placeholder="Nhập mật khẩu" />
-            </View>
-            <View style={styles.iconinput}>
-              <Icon name="lock" size={30} color="chartreuse" />
-              <TextInput style={styles.input}
-                placeholderTextColor={"#000033"}
-                placeholder="Nhập lại mật khẩu" />
-            </View>
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
+
+  const handleRegister = () => {
+      if (email === "" || password === "" || confirmPassword === "") {
+          Alert.alert('Bạn chưa nhập đầy đủ thông tin!!!');
+      }
+      else {
+          if (password !== confirmPassword) {
+              Alert.alert('Mật khẩu không trùng khớp');
+          }
+          else {
+              const newAccount = {
+                  email: email,
+                  password: password,
+              };
+              addRegister(newAccount);
+          }
+      }
+  }
+
+  const addRegister = async (itemAccount) => {
+      try {
+          const existingUserItems = await AsyncStorage.getItem('userItems');
+          let userItems = [];
+          if (existingUserItems) {
+              userItems = JSON.parse(existingUserItems);
+          }
+
+          // Kiểm tra xem email đã tồn tại trong danh sách đăng ký chưa
+          const existingUserIndex = userItems.findIndex(
+              (item) => item.email === itemAccount.email
+          );
+
+          if (existingUserIndex !== -1) {
+              Alert.alert('Tại khoản đã có người sử dụng');
+          } else {
+              const newAccount = {
+                  ...itemAccount
+              };
+              userItems.push(newAccount);
+              await AsyncStorage.setItem('userItems', JSON.stringify(userItems));
+              console.log('aaa', userItems);
+              alert('Successful');
+              navigation.navigate('Login');
+          }
+      } catch (error) {
+          console.log('Error adding account:', error);
+      }
+  };
+
+return (
+  <View style={styles.container}>
+          <View style={styles.content}>
+              <Text style={styles.new}>Tạo tài khoản</Text>
+              <TextInput
+                  style={styles.input}
+                  placeholder="Email"
+                  keyboardType="input your email-address"
+                  value={email}
+                  onChangeText={(value) => setEmail(value)}
+              />
+
+              <TextInput
+                  style={styles.input}
+                  placeholder="Mật khẩu"
+                  secureTextEntry
+                  value={password}
+                  onChangeText={(value) => setPassword(value)}
+              />
+
+              <TextInput
+                  style={styles.input}
+                  placeholder="Nhập lại mật khẩu"
+                  secureTextEntry
+                  value={confirmPassword}
+                  onChangeText={(value) => setConfirmPassword(value)}
+              />
+
+              <TouchableOpacity
+                  style={styles.button}
+                  onPress={handleRegister}
+              >
+                  <Text style={styles.buttonText}>Đăng ký</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                            <Text style={styles.link}>Đăng nhập</Text>
+                </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('HomeScreen')}>
-            <Text style={styles.buttonText}>Đăng kí</Text>
-          </TouchableOpacity>
-          <View style={styles.rowContainer}>
-            <Text style={{ alignSelf: 'flex-end' }}>Bạn đã có tài khoản? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={{ textAlign: 'center', color: '#008000' }}> Đăng nhập</Text>
-            </TouchableOpacity>
-          </View>
-          <StatusBar style="auto" />
-        </ImageBackground>
-      </View>
-    </KeyboardAvoidingView>
-
-
-  );
+  </View>
+);
 }
-
 const styles = StyleSheet.create({
-  rowContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
+  bg: {
+      flex: 1,
+      resizeMode: 'cover',
+      justifyContent: 'center',
   },
-  iconinput: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderBottomColor: 'black',
-    borderBottomWidth: 0.3,
-    marginBottom: 10,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: 'bold',
-  },
-  container: {
-    flex: 1,
-    alignItems: 'center',
+  link: {
+    marginTop: 30,
+    color: 'red',
+    fontSize: 20,
     justifyContent: 'center',
+  },
+  new:{
+    color: 'darkgreen',
+    marginBottom:20,
+    fontSize: 35,
+    marginTop: 16,
   },
   input: {
-    height: 40,
-    width: 300,
-    backgroundColor: 'white',
-    paddingHorizontal: 10,
+      color: 'gray',
+      backgroundColor: '#ffff',
+      margin: 10,
+      borderRadius: 10,
+      height: 70,
+      width: '70%',
+      borderWidth: 1,
+      marginBottom: 10,
+      paddingLeft: 10,
+  },
+  container: {
+      flex: 1,
+      backgroundColor: 'white',
 
+  },
+  buttonUserName: {
+      justifyContent: 'left',
+  },
+  content: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+  },
+  text: {
+      fontSize: 18,
+      marginBottom: 16,
   },
   button: {
-    backgroundColor: '#006400',
-    padding: 10,
-    marginTop: 30,
+      backgroundColor: '#008000',
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderRadius: 10,
+      width: '70%',
+      marginTop: 30,
+      alignItems: 'center',
   },
   buttonText: {
-    width: 300,
-    color: 'white',
-    fontSize: 16,
-    textAlign: 'center',
+      color: 'white',
+      fontSize: 16,
+      fontWeight: 'bold',
   },
-  background: {
-    flex: 1,
-
-    backgroundColor: 'white',
-    resizeMode: 'cover',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 420
+  footer: {
+      padding: 16,
+      backgroundColor: '#f9f9f9',
+      alignItems: 'center',
+  },
+  footerText: {
+      fontSize: 12,
+      color: '#888',
   },
 });
+
+
 
 export default Register;

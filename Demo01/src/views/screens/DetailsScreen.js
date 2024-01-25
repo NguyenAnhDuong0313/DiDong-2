@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ImageBackground,
   SafeAreaView,
@@ -6,32 +6,51 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import COLORS from '../../consts/colors';
 
-const DetailsScreen = ({navigation, route}) => {
-  const {item} = route.params;
+const DetailsScreen = ({ navigation, route }) => {
+  const { item } = route.params;
+  const [quantity, setQuantity] = useState(1);
+
   const addToCart = async (product) => {
     try {
       const existingCart = await AsyncStorage.getItem('cart');
       const cart = existingCart ? JSON.parse(existingCart) : [];
-      cart.push(product);
-      await AsyncStorage.setItem('cart', JSON.stringify(cart));
+      const existingItemIndex = cart.findIndex((cartItem) => cartItem.id === product.id);
 
+      if (existingItemIndex !== -1) {
+        cart[existingItemIndex].quantity += quantity;
+      } else {
+        cart.push({ ...product, quantity });
+      }
+
+      await AsyncStorage.setItem('cart', JSON.stringify(cart));
       console.log('Sản phẩm đã được thêm vào giỏ hàng thành công!');
     } catch (error) {
       console.error('Lỗi khi thêm vào giỏ hàng:', error);
     }
   };
+
+  const increaseQuantity = () => {
+    setQuantity((prevQuantity) => prevQuantity + 1);
+  };
+
+  const decreaseQuantity = () => {
+    if (quantity > 1) {
+      setQuantity((prevQuantity) => prevQuantity - 1);
+    }
+  };
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: COLORS.white}}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
       <View style={style.header}>
         <View style={style.headerBtn}>
           <Icon name="chevron-left" size={25} onPress={navigation.goBack} />
         </View>
-        <Text style={{fontWeight: 'bold', fontSize: 25}}>Chi Tiết Sản Phẩm</Text>
+        <Text style={{ fontWeight: 'bold', fontSize: 25 }}>Chi Tiết Sản Phẩm</Text>
         <View style={style.headerBtn}>
           <Icon name="dots-vertical" size={25} color={COLORS.primary} />
         </View>
@@ -72,7 +91,7 @@ const DetailsScreen = ({navigation, route}) => {
               </Text>
             </View>
             <Text
-              style={{fontSize: 9, color: COLORS.white, fontWeight: 'bold'}}>
+              style={{ fontSize: 9, color: COLORS.white, fontWeight: 'bold' }}>
               250 Reviews
             </Text>
           </View>
@@ -80,7 +99,7 @@ const DetailsScreen = ({navigation, route}) => {
 
         <View style={style.detailsContainer}>
           <Text
-            style={{fontSize: 20, fontWeight: 'bold', color: COLORS.primary}}>
+            style={{ fontSize: 20, fontWeight: 'bold', color: COLORS.primary }}>
             {item.title}
           </Text>
           <Text
@@ -92,7 +111,7 @@ const DetailsScreen = ({navigation, route}) => {
             }}>
             Description
           </Text>
-          <Text style={{color: COLORS.dark, fontSize: 12, lineHeight: 20}}>
+          <Text style={{ color: COLORS.dark, fontSize: 12, lineHeight: 20 }}>
             {item.description}
           </Text>
           <View
@@ -102,20 +121,20 @@ const DetailsScreen = ({navigation, route}) => {
               justifyContent: 'space-between',
             }}>
             <Text
-              style={{color: COLORS.green, fontSize: 22, fontWeight: 'bold'}}>
+              style={{ color: COLORS.green, fontSize: 22, fontWeight: 'bold' }}>
               {item.price}
             </Text>
             <View style={style.quantityContainer}>
-              <View style={style.quantityBtn}>
+              <TouchableOpacity style={style.quantityBtn} onPress={increaseQuantity}>
                 <Icon name="plus" size={20} />
-              </View>
-              <Text style={{color: COLORS.white, fontWeight: 'bold'}}>1</Text>
-              <View style={style.quantityBtn}>
+              </TouchableOpacity>
+              <Text style={{ color: COLORS.white, fontWeight: 'bold' }}>{quantity}</Text>
+              <TouchableOpacity style={style.quantityBtn} onPress={decreaseQuantity}>
                 <Icon name="minus" size={20} />
-              </View>
+              </TouchableOpacity>
             </View>
           </View>
-          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <View
               style={{
                 height: 50,
@@ -130,7 +149,7 @@ const DetailsScreen = ({navigation, route}) => {
               <Icon name="heart-outline" size={28} color={COLORS.primary} />
             </View>
             <View style={style.addToCartBtn} >
-              <Text onPress={() => addToCart(item)} style={{color: COLORS.white}}>Add To Cart</Text>
+              <Text onPress={() => addToCart(item)} style={{ color: COLORS.white }}>Add To Cart</Text>
             </View>
           </View>
         </View>
@@ -180,7 +199,7 @@ const style = StyleSheet.create({
     marginVertical: 20,
     flexDirection: 'row',
   },
-  detailsContainer: {flex: 1, paddingHorizontal: 20, marginTop: 40},
+  detailsContainer: { flex: 1, paddingHorizontal: 20, marginTop: 40 },
   quantityBtn: {
     height: 25,
     width: 25,
